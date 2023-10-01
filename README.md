@@ -814,3 +814,81 @@ Questa volta i dati inviati vengono scritti sulla variabile superglobale $_GET:
  ![Screenshot dell'output](/res/php_output_26.png)
 
  Come vediamo, il browser nel costruire l'URL per comunicare col server, ha aggiunto una parte: `?name=asda&email=asfa%40asd.it` chiamata **query string** che contiene le informazioni che l'utente ha inserito nel form. 
+
+ # Database MySQL e php
+ Ci sono due maniere per comunicare con un database MySQL. Ne utilizzeremo uno solo di questi perchè ci consente di usare il paradigma di programmazione procedurale che conosciamo già.
+ Il nostro obiettivo questa volta non è comunicare solo con il server Apache, ma anche con un altro server che è appunto il server MySQL. Per stabilire questa connessione si usa la funzione `mysqli_connect`. 
+
+ - apriamo XAMPP ed avviamo i servers Apache e MySQL
+ - creiamo un file php col seguente codice:
+ ```php
+ <?php 
+    //queste variabili contengono le ipostazioni di default 
+    //per lavorare in locale
+    $servername = "127.0.0.1";
+    $username = "root";
+    $password = "";
+
+    /* la funzione mysqli_connect assegna a $conn un riferimento
+    al database remoto. Quindi da ora useremo $conn per le altre 
+    operazioni sul DB. */
+    $conn = mysqli_connect($servername, $username, $password);
+
+    //se la connessione è andata male, $conn sarà NULL
+    if(!$conn){
+        //die chiude il programma
+        die("Connessione fallita col seguente errore: ".mysqli_connect_error());
+    }
+    echo "Connessione al DB riuscita!"
+?>
+ ``` 
+
+ Il codice sopra ci consente di testare la connessione verso il server MySQL. Tale server è un processo che ci consente di utilizzare il DBMS da remoto. Il prossimo passo da fare è creare un DB e accedere ai dati al suo interno. Per semplicità useremo l'interfaccia `phpmyadmin` per popolare il DB e poi useremo il codice php per leggere questi dati.
+
+ - apriamo il browser e connettiamoci all'URL `localhost/phpmyadmin/`.
+ - creiamo il DB `negozio` ed al suo inerno la tabella `articoli`.
+
+ ![Screenshot dell'output](/res/php_output_28.png)
+
+ - popoliamo la tabella con una riga a piacere.
+
+  ![Screenshot dell'output](/res/php_output_29.png)
+
+ - creiamo un file php con il seguente codice
+ ```php
+ <?php 
+
+    $servername = "127.0.0.1";
+    $username = "root";
+    $password = "";
+    $dbname = "negozio";
+
+    $conn = mysqli_connect($servername, $username, $password, $dbname);
+
+    if(!$conn){
+        die("Connessione fallita col seguente errore: ".mysqli_connect_error());
+    }
+
+    $sql = "SELECT * FROM articoli"; 
+    //mysqli_query effettua la query e mette il risultato in una variabile
+    $result = mysqli_query($conn, $sql);
+
+    if(mysqli_num_rows($result) > 0){
+        while($row = mysqli_fetch_assoc($result)){ //legge i dati in forma di array associativo
+            echo "ID: ".$row["ID"]." Descrizione: ".$row["descr"]." Prezzo: ".$row["prezzo"]."<br>";
+        }
+    }else{
+        echo "Nessun record presente";
+    }
+
+    //dopo le operazioni sul DB è bene chiudere la connessione
+    //per evitare problemi di corruzione dei dati
+    mysqli_close($conn);
+?>
+ ```
+ Osserviamo che stavolta `mysqli_connect` ha preso in input anche il nome del DB. `$result = mysqli_query($conn, $sql);` abbiamo assegnato il risultato della query a $result, variabile che ha un tipo particolare. Per accedere ai dati dentro $result usiamo `mysqli_fetch_assoc($result)` che è una funzione che itera su ogni record restituito e lo trasforma in un array associativo.  `$row = mysqli_fetch_assoc($result)` assegna questo array a $row, così vi possiamo accedere e leggere i valori. Il tutto è in un ciclo while perchè l'istruzione `mysqli_fetch_assoc` produce un array per ogni iterazione e quando finisce produce `false` facendoci uscire dal ciclo. 
+ ![Screenshot dell'output](/res/php_output_27.png)
+
+ Notiamo che quando accediamo al record nell'array associativo `$row`, la chave del campo è proprio il suo nome come risulta dalla definizione della tabella.
+
+ ## Dal form al DB
