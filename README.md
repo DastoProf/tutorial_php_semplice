@@ -892,3 +892,81 @@ Questa volta i dati inviati vengono scritti sulla variabile superglobale $_GET:
  Notiamo che quando accediamo al record nell'array associativo `$row`, la chave del campo è proprio il suo nome come risulta dalla definizione della tabella.
 
  ## Dal form al DB
+ Vediamo un semplice snippet per creare un form in una pagina HTML, inviare i dati del form ad uno script PHP, caricarli sul DB:
+ - form.html
+  ```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form di inserimento</title>
+</head>
+<body>
+    <form action="insert.php" method="post">
+        Descrizione: <input type="text" name="descrizione" ><br>
+        Prezzo: <input type="number" name="prezzo"><br>
+        <input type="submit" value="Aggiungi articolo">
+    </form>
+</body>
+</html>
+ ```
+ - insert.php
+```php
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risultato inserimento</title>
+    <style>
+        #error{
+            color: red;
+        }
+    </style>
+</head>
+<body>
+<?php 
+        //mi connetto al db
+        $servername = "127.0.0.1";
+        $username = "root";
+        $password = "";
+        $dbname = "negozio";
+
+        $conn = mysqli_connect($servername, $username, $password, $dbname);
+
+        if($_POST["descrizione"] && $_POST["prezzo"] ){
+            //carico i dati se ci sono
+
+            $sql = "INSERT INTO articoli (descr, prezzo)
+                    VALUES ('$_POST[descrizione]', '$_POST[prezzo]')";
+
+            if (mysqli_query($conn, $sql)) {
+                echo "<h1>Record inserito</h1>";
+              } else {
+                echo "<h3 id='error'>Errore MySQL: ".mysqli_error($conn)."</h3>";
+              }
+        }
+
+        mysqli_close($conn);
+    ?>
+    <a href="form.html">Torna indietro</a>
+</body>
+</html>
+```
+Testiamo il risultato del codice sopra:
+- form.html
+
+![Screenshot dell'output](/res/php_output_30.png)
+
+- insert.php
+
+![Screenshot dell'output](/res/php_output_31.png)
+
+- guardiamo la tabella articoli del DB:
+
+![Screenshot dell'output](/res/php_output_32.png)
+
+Si nota l'inserimento dell'item "Yacht 50 mt". L'Id dello stesso è 9 perchè sono state effettuate diverse prove.
+
+>Il valore delle variabili `AUTO_INCREMENT` non viene diminuito in caso di inserimento e successiva cancellazione di un record.
